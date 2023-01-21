@@ -11,39 +11,39 @@ all of txt's behavior is within the `TXT` foreign class and all position/size re
 
 | method | description |
 | :-: | :-: |
-| width()   | returns window width                             |
-| width(w)  | sets window width to `w`                         |
-| height()  | returns window height                            |
-| height(h) | sets window height to `h`                        |
-| size()    | returns window size as a list                    |
-| size(w,h) | compressed version of `width(w)` and `height(h)` |
-| size(s)   | sets window size to `s`, s must be a list        |
-| title(t)  | sets window title to `t`                         |
-| move(x,y) | moves window by `x`, `y`                         |
-| exit()    | exits txt                                        |
+| `width()`   | returns window width                             |
+| `width(w)`  | sets window width to `w`                         |
+| `height()`  | returns window height                            |
+| `height(h)` | sets window height to `h`                        |
+| `size()`    | returns window size as a list                    |
+| `size(w,h)` | compressed version of `width(w)` and `height(h)` |
+| `size(s)`   | sets window size to `s`, s must be a list        |
+| `title(t)`  | sets window title to `t`                         |
+| `move(x,y)` | moves window by `x`, `y`                         |
+| `exit()`    | exits txt                                        |
 
 ### drawing methods
 
 | method | description |
 | :-: | :-: |
-| clear(char)        | clears screen with character `char`                      |
-| write(x,y,text)    | writes `text` at position `x`, `y`                       |
-| read(x,y)          | reads character at position `x`, `y`                     |
-| color(r,g,b)       | sets color for new characters to `r`, `g`, `b`           |
-| color(g)           | grayscale version of `color(r,g,b)`                      |
-| bgColor(r,g,b)     | same as `color(r,g,b)` but sets background color instead |
-| bgColor(g)         | grayscale version of `bgColor(r,g,b)`                    |
+| `clear(char)`        | clears screen with character `char`                      |
+| `write(x,y,text)`    | writes `text` at position `x`, `y`                       |
+| `read(x,y)`          | reads character at position `x`, `y`                     |
+| `color(r,g,b)`       | sets color for new characters to `r`, `g`, `b`           |
+| `color(g)`           | grayscale version of `color(r,g,b)`                      |
+| `bgColor(r,g,b)`     | same as `color(r,g,b)` but sets background color instead |
+| `bgColor(g)`         | grayscale version of `bgColor(r,g,b)`                    |
 
 ### input methods
 
 | method | description |
 | :-: | :-: |
-| mousePos()         | returns mouse position in cell coordinates as list       |
-| mouseDown(btn)     | checks if mouse button `btn` is down                     |
-| mousePressed(btn)  | checks if mouse button `btn` was just pressed            |
-| keyDown(key)       | checks if keyboard key `key` is down                     |
-| keyPressed(key)    | checks if keyboard key `key` was just pressed            |
-| charPressed(char)  | returns character just pressed. (can be utf-8)           |
+| `mousePos()`         | returns mouse position in cell coordinates as list       |
+| `mouseDown(btn)`     | checks if mouse button `btn` is down                     |
+| `mousePressed(btn)`  | checks if mouse button `btn` was just pressed            |
+| `keyDown(key)`       | checks if keyboard key `key` is down                     |
+| `keyPressed(key)`    | checks if keyboard key `key` was just pressed            |
+| `charPressed(char)`  | returns character just pressed. (can be utf-8)           |
 
 allowed key names are a-z, 0-9, arrow keys (`right`, `left`, `up`, `down`), `space` and `escape`
 
