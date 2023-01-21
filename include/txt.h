@@ -18,9 +18,9 @@
  * 	(I don't feel like designing a color palette)
  */
 
-// 8 bytes per cell
-// satisfactory
-#define CELL_SIZE 8
+// 7 bytes per cell
+// unsatisfactory
+#define CELL_SIZE 7
 
 typedef struct
 {

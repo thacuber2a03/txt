@@ -2,18 +2,6 @@
 
 txtGlobal G = {0};
 
-static char* typenames[] =
-{
-	[WREN_TYPE_NUM] = "number",
-	[WREN_TYPE_BOOL] = "bool",
-	[WREN_TYPE_STRING] = "string",
-	[WREN_TYPE_NULL] = "null",
-	[WREN_TYPE_LIST] = "list",
-	[WREN_TYPE_MAP] = "map",
-	[WREN_TYPE_UNKNOWN] = "unknown",
-	[WREN_TYPE_FOREIGN] = "foreign",
-};
-
 static void debugPrint(WrenVM* vm, const char* text)
 {
 	printf("%s", text);
@@ -37,8 +25,7 @@ static void errorPrint(WrenVM* vm, WrenErrorType errorType,
 
 static void freeImport(WrenVM* vm, const char* name, WrenLoadModuleResult res)
 {
-	char* source = res.source;
-	free(source);
+	free(res.source);
 }
 
 static WrenLoadModuleResult loadModule(WrenVM* vm, const char* name)
@@ -48,11 +35,7 @@ static WrenLoadModuleResult loadModule(WrenVM* vm, const char* name)
 	// just straight up fopen the file
 	// idk if this is a proper solution to be honest
 	FILE* f = fopen(name, "rb");
-	if (!f)
-	{
-		printf("%s\n", strerror(errno));
-		return res;
-	}
+	if (!f) return res;
 
 	fseek(f, 0, SEEK_END);
 	int size = ftell(f);
@@ -86,7 +69,7 @@ int main(int argc, char* argv[])
 	FILE* f = fopen(startFile, "rb");
 	if (!f)
 	{
-		printf("File '%s' does not exist.", startFile);
+		printf("file '%s' does not exist.", startFile);
 		return -1;
 	}
 
@@ -95,7 +78,7 @@ int main(int argc, char* argv[])
 	fseek(f, 0, SEEK_SET);
 	if (fileSize > 1073741824) // 1 GiB
 	{
-		printf("The file is way too large, what the heck?");
+		printf("the file is way too large, what the heck?");
 		return -1;
 	}
 	G.code = malloc(fileSize+1);
@@ -105,7 +88,7 @@ int main(int argc, char* argv[])
 		int readlen = fread(G.code, 1, fileSize, f);
 		if (readlen != fileSize)
 		{
-			printf("Couldn't read file: %s\n", strerror(errno));
+			printf("couldn't read file: %s\n", strerror(errno));
 			free(G.code);
 			return -1;
 		}
@@ -114,7 +97,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		printf("Couldn't allocate space for code.");
+		printf("couldn't allocate space for code.");
 		free(G.code);
 		return -1;
 	}
@@ -213,7 +196,7 @@ int main(int argc, char* argv[])
 				i/(int)G.consoleSize.x*G.fontSize
 			};
 
-			DrawRectangleV(pos, fontSizeV, bg);
+			DrawRectangleV(pos, MeasureTextEx(G.font, &chr, G.fontSize, 1), bg);
 			DrawTextCodepoint(G.font, chr, pos, G.fontSize, fg);
 		}
 		resetColors();

@@ -22,10 +22,11 @@ class TXT { \n\
 	foreign static size(w,h) \n\
 	foreign static move(x,y) \n\
 	foreign static title(t) \n\
+	foreign static fontSize(px) \n\
 	foreign static exit() \n\
 \n\
 	foreign static clear(char) \n\
-	static write(x, y, value) { write_(x,y,value.toString) } \n\
+	static write(x, y, value) { write_(x, y, value.toString) } \n\
 	foreign static write_(x,y,text) \n\
 	foreign static read(x, y) \n\
 	foreign static color(r,g,b) \n\
@@ -222,6 +223,13 @@ defineForeignMethod(title)
 {
 	txtEnsureType(1, WREN_TYPE_STRING);
 	SetWindowTitle(wrenGetSlotString(vm, 1));
+}
+
+defineForeignMethod(fontSize)
+{
+	txtEnsureType(1, WREN_TYPE_NUM);
+	G.fontSize = wrenGetSlotDouble(vm, 1);
+	txtResize(G.consoleSize.x, G.consoleSize.y);
 }
 
 defineForeignMethod(clear)
@@ -446,6 +454,8 @@ WrenForeignMethodFn bindTxtMethods(WrenVM* vm, const char* module, const char* c
 		//if (params == 1) return txtmovelist;
 		return NULL;
 	}
+
+	foreignMethod(fontSize);
 
 	foreignMethod(clear);
 
