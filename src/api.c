@@ -25,7 +25,8 @@ class TXT { \n\
 	foreign static exit() \n\
 \n\
 	foreign static clear(char) \n\
-	foreign static write(x, y, text) \n\
+	static write(x, y, value) { write_(x,y,value.toString) } \n\
+	foreign static write_(x,y,text) \n\
 	foreign static read(x, y) \n\
 	foreign static color(r,g,b) \n\
 	foreign static color(g) \n\
@@ -236,11 +237,10 @@ defineForeignMethod(write)
 {
 	txtEnsureType(1, WREN_TYPE_NUM);
 	txtEnsureType(2, WREN_TYPE_NUM);
-	txtEnsureType(3, WREN_TYPE_STRING);
 
-	int x = wrenGetSlotDouble(G.vm, 1);
-	int y = wrenGetSlotDouble(G.vm, 2);
-	const char* text = wrenGetSlotString(G.vm, 3);
+	int x = wrenGetSlotDouble(vm, 1);
+	int y = wrenGetSlotDouble(vm, 2);
+	const char* text = wrenGetSlotString(vm, 3);
 
 	for (int i = 0; i < strlen(text); i++) txtWriteChar(x+i, y, text[i]);
 }
@@ -293,9 +293,9 @@ defineForeignMethod(bgGrayscale)
 	txtEnsureType(1, WREN_TYPE_NUM);
 
 	int g = wrenGetSlotDouble(vm, 1);
-	G.currentColor.r = g;
-	G.currentColor.g = g;
-	G.currentColor.b = g;
+	G.currentBgColor.r = g;
+	G.currentBgColor.g = g;
+	G.currentBgColor.b = g;
 }
 
 defineForeignMethod(mousePos)
@@ -448,7 +448,9 @@ WrenForeignMethodFn bindTxtMethods(WrenVM* vm, const char* module, const char* c
 	}
 
 	foreignMethod(clear);
-	foreignMethod(write);
+
+	if (strstr(signature, "write_")) return txtwrite;
+
 	foreignMethod(read);
 
 	if (strstr(signature, "color"))
