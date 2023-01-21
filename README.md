@@ -5,22 +5,23 @@ a text based game framework, sorta like [cel7](https://rxi.itch.io/cel7) but not
 
 you must make a 'Game' class with a `new` constructor and an `update` method that must also take in a parameter for the delta time.
 
-all of txt's behavior is within the `TXT` foreign class and all position/size related methods are measured in cells
+all of txt's behavior is within the `TXT` foreign class and all window position/size related methods are measured in cells
 
 ### window methods
 
 | method | description |
 | :-: | :-: |
-| `width()`   | returns window width                             |
-| `width(w)`  | sets window width to `w`                         |
-| `height()`  | returns window height                            |
-| `height(h)` | sets window height to `h`                        |
-| `size()`    | returns window size as a list                    |
-| `size(w,h)` | compressed version of `width(w)` and `height(h)` |
-| `size(s)`   | sets window size to `s`, s must be a list        |
-| `title(t)`  | sets window title to `t`                         |
-| `move(x,y)` | moves window by `x`, `y`                         |
-| `exit()`    | exits txt                                        |
+| `width()`     | returns window width                             |
+| `width(w)`    | sets window width to `w`                         |
+| `height()`    | returns window height                            |
+| `height(h)`   | sets window height to `h`                        |
+| `size()`      | returns window size as a list                    |
+| `size(w,h)`   | compressed version of `width(w)` and `height(h)` |
+| `size(s)`     | sets window size to `s`, s must be a list        |
+| `title(t)`    | sets window title to `t`                         |
+| `move(x,y)`   | moves window by `x`, `y`                         |
+| `fontSize(s)` | sets font size to `s`                            |
+| `exit()`      | exits txt                                        |
 
 ### drawing methods
 
