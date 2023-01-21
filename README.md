@@ -32,7 +32,7 @@ all of txt's behavior is within the `TXT` foreign class and all position/size re
 | color(r,g,b)       | sets color for new characters to `r`, `g`, `b`           |
 | color(g)           | grayscale version of `color(r,g,b)`                      |
 | bgColor(r,g,b)     | same as `color(r,g,b)` but sets background color instead |
-| bgColor(r,g,b)     | grayscale version of `bgColor(r,g,b)`                    |
+| bgColor(g)         | grayscale version of `bgColor(r,g,b)`                    |
 
 ### input methods
 
