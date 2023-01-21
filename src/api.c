@@ -22,6 +22,7 @@ class TXT { \n\
 	foreign static size(w,h) \n\
 	foreign static move(x,y) \n\
 	foreign static title(t) \n\
+	foreign static exit() \n\
 \n\
 	foreign static clear(char) \n\
 	foreign static write(x, y, text) \n\
@@ -37,8 +38,6 @@ class TXT { \n\
 	foreign static keyDown(key) \n\
 	foreign static keyPressed(key) \n\
 	foreign static charPressed() \n\
-\n\
-	foreign static exit() \n\
 }\
 ";
 
@@ -323,7 +322,7 @@ defineForeignMethod(mouseDown)
 	if (!strcasecmp(buttonName, "left"))   button = MOUSE_BUTTON_LEFT;
 	if (!strcasecmp(buttonName, "right"))  button = MOUSE_BUTTON_RIGHT;
 	if (!strcasecmp(buttonName, "middle")) button = MOUSE_BUTTON_MIDDLE;
-	if (button == -1) txtThrowErr("Unknown button name");
+	if (button == -1) txtThrowErr("unknown button name");
 
 	wrenEnsureSlots(vm, 1);
 	wrenSetSlotBool(vm, 0, IsMouseButtonDown(button));
@@ -338,7 +337,7 @@ defineForeignMethod(mousePressed)
 	if (!strcasecmp(buttonName, "left"))   button = MOUSE_BUTTON_LEFT;
 	if (!strcasecmp(buttonName, "right"))  button = MOUSE_BUTTON_RIGHT;
 	if (!strcasecmp(buttonName, "middle")) button = MOUSE_BUTTON_MIDDLE;
-	if (button == -1) txtThrowErr("Unknown button name");
+	if (button == -1) txtThrowErr("unknown button name");
 
 	wrenEnsureSlots(vm, 1);
 	wrenSetSlotBool(vm, 0, IsMouseButtonPressed(button));
@@ -373,6 +372,18 @@ static int getKeyFromKeyname(const char* keyname)
 	if (!strcasecmp(keyname, "b"     )) return KEY_B;
 	if (!strcasecmp(keyname, "n"     )) return KEY_N;
 	if (!strcasecmp(keyname, "m"     )) return KEY_M;
+
+	if (!strcasecmp(keyname, "0"     )) return KEY_ZERO;
+	if (!strcasecmp(keyname, "1"     )) return KEY_ONE;
+	if (!strcasecmp(keyname, "2"     )) return KEY_TWO;
+	if (!strcasecmp(keyname, "3"     )) return KEY_THREE;
+	if (!strcasecmp(keyname, "4"     )) return KEY_FOUR;
+	if (!strcasecmp(keyname, "5"     )) return KEY_FIVE;
+	if (!strcasecmp(keyname, "6"     )) return KEY_SIX;
+	if (!strcasecmp(keyname, "7"     )) return KEY_SEVEN;
+	if (!strcasecmp(keyname, "8"     )) return KEY_EIGHT;
+	if (!strcasecmp(keyname, "9"     )) return KEY_NINE;
+
 	if (!strcasecmp(keyname, "up"    )) return KEY_UP;
 	if (!strcasecmp(keyname, "down"  )) return KEY_DOWN;
 	if (!strcasecmp(keyname, "left"  )) return KEY_LEFT;
@@ -388,7 +399,7 @@ defineForeignMethod(keyDown)
 
 	const char* keyname = wrenGetSlotString(vm, 1);
 	int key = getKeyFromKeyname(keyname);
-	if (key == KEY_NULL) txtThrowErr("Unknown key name");
+	if (key == KEY_NULL) txtThrowErr("unknown key name");
 
 	wrenSetSlotBool(vm, 0, IsKeyDown(key));
 }
@@ -399,7 +410,7 @@ defineForeignMethod(keyPressed)
 
 	const char* keyname = wrenGetSlotString(vm, 1);
 	int key = getKeyFromKeyname(keyname);
-	if (key == KEY_NULL) txtThrowErr("Unknown key name");
+	if (key == KEY_NULL) txtThrowErr("unknown key name");
 
 	wrenSetSlotBool(vm, 0, IsKeyPressed(key));
 }
