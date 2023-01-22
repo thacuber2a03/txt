@@ -14,10 +14,10 @@ class Game {
 	}
 
 	update(dt) {
-    TXT.color(100)
+		TXT.color(100)
 		TXT.clear(".")
 		var msg = "Hello world!"
-    TXT.color(255)
+		TXT.color(255)
 		TXT.write(TXT.width()/2-msg.count/2, TXT.height()/2, msg)
 	}
 }
@@ -60,6 +60,8 @@ all of txt's behavior is within the `TXT` foreign class and all window position/
 | `color(g)`           | grayscale version of `color(r,g,b)`                      |
 | `bgColor(r,g,b)`     | same as `color(r,g,b)` but sets background color instead |
 | `bgColor(g)`         | grayscale version of `bgColor(r,g,b)`                    |
+
+note: both the current color and current background color will reset after the end of the `update` method
 
 ### input methods
 
