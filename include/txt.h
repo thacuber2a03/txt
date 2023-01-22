@@ -31,7 +31,6 @@ typedef struct
 	WrenVM* vm;
 
 	uint8_t* screen;
-	bool clearScreen;
 	Color currentColor, currentBgColor;
 
 	Font font;
