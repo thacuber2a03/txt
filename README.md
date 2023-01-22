@@ -31,9 +31,11 @@ tada.wav
 
 you must make a 'Game' class with a `new` constructor and an `update` method that must also take in a parameter for the delta time.
 
-all of txt's behavior is within the `TXT` foreign class and all window position/size related methods are measured in cells
+all of txt's behavior is within the `TXT` foreign class
 
 ### window methods
+
+note: all window position/size related methods are measured in cells
 
 | method | description |
 | :-: | :-: |
