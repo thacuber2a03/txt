@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 		if (wrenCall(G.vm, updateMethod) != WREN_RESULT_SUCCESS) return -1;
 
 		BeginDrawing();
-		if (G.clearScreen) ClearBackground(BLACK);
+		ClearBackground(BLACK);
 		for (int i = 0; i < G.totalCells; i++)
 		{
 			int b = i*CELL_SIZE;
