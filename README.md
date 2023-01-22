@@ -1,6 +1,32 @@
 # txt
 a text based game framework, sorta like [cel7](https://rxi.itch.io/cel7) but not quite. it uses [Wren](https://wren.io/), the font is unchangeable and I didn't want to design a palette so you can use rgb (0-255)
 
+## how to use
+
+download latest txt version from releases
+
+make a main.wren file, then paste this small hello world in
+
+```wren
+class Game {
+	construct new() {
+		TXT.size(16, 16)
+	}
+
+	update(dt) {
+    TXT.color(100)
+		TXT.clear(".")
+		var msg = "Hello world!"
+    TXT.color(255)
+		TXT.write(TXT.width()/2-msg.count/2, TXT.height()/2, msg)
+	}
+}
+```
+
+save and close the file, then run `txt` in the command line
+
+tada.wav
+
 ## doc
 
 you must make a 'Game' class with a `new` constructor and an `update` method that must also take in a parameter for the delta time.
