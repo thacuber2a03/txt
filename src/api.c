@@ -14,10 +14,12 @@
 const char* txtClass = "\
 class TXT { \n\
 	foreign static width() \n\
+	static width { TXT.width() } \n\
 	foreign static width(w) \n\
 	foreign static height() \n\
+	static height { TXT.height() } \n\
 	foreign static height(h) \n\
-	foreign static size() \n\
+	static size { TXT.size() } \n\
 	foreign static size(s) \n\
 	foreign static size(w,h) \n\
 	foreign static move(x,y) \n\
@@ -26,6 +28,7 @@ class TXT { \n\
 	foreign static exit() \n\
 \n\
 	foreign static clear(char) \n\
+	foreign static clear() \n\
 	static write(x, y, value) { write_(x, y, value.toString) } \n\
 	foreign static write_(x,y,text) \n\
 	foreign static read(x, y) \n\
@@ -35,11 +38,13 @@ class TXT { \n\
 	foreign static bgColor(g) \n\
 \n\
 	foreign static mousePos() \n\
+	static mousePos { TXT.mousePos() } \n\
 	foreign static mouseDown(button) \n\
 	foreign static mousePressed(button) \n\
 	foreign static keyDown(key) \n\
 	foreign static keyPressed(key) \n\
 	foreign static charPressed() \n\
+	static charPressed { TXT.charPressed() } \n\
 }\
 ";
 
@@ -111,7 +116,7 @@ static int getSignatureParams(const char* signature)
 static void txtWriteCharIdx(int cell, char c)
 {
 	cell %= G.totalCells;
-	int i = (cell*CELL_SIZE);
+	int i = cell*CELL_SIZE;
 	G.screen[i] = c;
 
 	G.screen[i+1] = G.currentColor.r;
@@ -237,8 +242,12 @@ defineForeignMethod(clear)
 	txtEnsureType(1, WREN_TYPE_STRING);
 
 	const char* chr = wrenGetSlotString(G.vm, 1);
-	for (int i = 0; i < G.totalCells; i++)
-		txtWriteCharIdx(i, *chr);
+	for (int i = 0; i < G.totalCells; i++) txtWriteCharIdx(i, *chr);
+}
+
+defineForeignMethod(clearSpaces)
+{
+	for (int i = 0; i < G.totalCells; i++) txtWriteCharIdx(i, ' ');
 }
 
 defineForeignMethod(write)
@@ -261,6 +270,7 @@ defineForeignMethod(read)
 	int x = wrenGetSlotDouble(G.vm, 1);
 	int y = wrenGetSlotDouble(G.vm, 2);
 	const char c = txtGetChar(x, y);
+
 	wrenSetSlotBytes(G.vm, 0, &c, 1);
 }
 
@@ -457,7 +467,11 @@ WrenForeignMethodFn bindTxtMethods(WrenVM* vm, const char* module, const char* c
 
 	foreignMethod(fontSize);
 
-	foreignMethod(clear);
+	if (strstr(signature, "clear"))
+	{
+		if (params == 0) return txtclearSpaces;
+		return txtclear;
+	}
 
 	if (strstr(signature, "write_")) return txtwrite;
 
