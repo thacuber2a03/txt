@@ -1,5 +1,9 @@
 #include "txt.h"
 
+#include "font.h"
+extern unsigned char font_ttf[];
+extern unsigned int font_ttf_len;
+
 txtGlobal G = {0};
 
 static void debugPrint(WrenVM* vm, const char* text)
@@ -124,7 +128,7 @@ int main(int argc, char* argv[])
 	InitWindow(0, 0, "a txt game");
 	SetExitKey(KEY_NULL);
 
-	G.font = LoadFont("font.ttf");
+	G.font = LoadFontFromMemory(".ttf", font_ttf, font_ttf_len, G.fontSize, NULL, 657);
 
 	// assuming font is square,
 	// which it just so happens to be
@@ -177,18 +181,18 @@ int main(int argc, char* argv[])
 		ClearBackground(BLACK);
 		for (int i = 0; i < G.totalCells; i++)
 		{
-			int b = i*CELL_SIZE;
-			int chr = G.screen[b];
+			int c = i*CELL_SIZE;
+			char chr = G.screen[c];
 			if (chr == 0) continue;
 			Color fg, bg;
-			fg.r = G.screen[b+1];
-			fg.g = G.screen[b+2];
-			fg.b = G.screen[b+3];
+			fg.r = G.screen[c+1];
+			fg.g = G.screen[c+2];
+			fg.b = G.screen[c+3];
 			fg.a = 255;
 
-			bg.r = G.screen[b+4];
-			bg.g = G.screen[b+5];
-			bg.b = G.screen[b+6];
+			bg.r = G.screen[c+4];
+			bg.g = G.screen[c+5];
+			bg.b = G.screen[c+6];
 			bg.a = 255;
 
 			Vector2 pos = {
@@ -196,8 +200,8 @@ int main(int argc, char* argv[])
 				i/(int)G.consoleSize.x*G.fontSize
 			};
 
-			DrawRectangleV(pos, MeasureTextEx(G.font, &chr, G.fontSize, 1), bg);
-			DrawTextCodepoint(G.font, chr, pos, G.fontSize, fg);
+			DrawRectangleV(pos, MeasureTextEx(G.font, "a", G.fontSize, 1), bg);
+			DrawTextEx(G.font, (char[]){chr, '\0'}, pos, G.fontSize, 1, fg);
 		}
 		resetColors();
 		EndDrawing();
