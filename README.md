@@ -29,9 +29,9 @@ tada.wav
 
 ## doc
 
-you must make a 'Game' class with a `new` constructor and an `update` method that must also take in a parameter for the delta time.
+you must make a 'Game' class with a `new` constructor and an `update` method that must also take in a parameter for the delta time
 
-all of txt's behavior is within the `TXT` foreign class
+all of txt's behavior is within the `TXT` foreign class, and currently all "get" methods have an actual Wren getter attached
 
 ### window methods
 
@@ -74,7 +74,7 @@ note: both the current color and current background color will reset after the e
 | `mousePressed(btn)`  | checks if mouse button `btn` was just pressed            |
 | `keyDown(key)`       | checks if keyboard key `key` is down                     |
 | `keyPressed(key)`    | checks if keyboard key `key` was just pressed            |
-| `charPressed(char)`  | returns character just pressed. (can be utf-8)           |
+| `charPressed()`      | returns character just pressed. (can be utf-8)           |
 
 allowed key names are a-z, 0-9, arrow keys (`right`, `left`, `up`, `down`), `space` and `escape`
 
@@ -92,4 +92,4 @@ if you're more of a Makefile person you can also run `mingw32-make`
 
 made with [raylib](https://raylib.com/) by [Ramón Santamaria (@raysan5)](https://twitter.com/raysan5) and [Wren](https://wren.io) by [Robert Nystrom (@munificent)](https://stuffwithstuff.com/)
 
-font is Press Start 2P
+font is a recreation of IBM's CGA font: https://int10h.org/oldschool-pc-fonts/fontlist/font?ibm_cga
