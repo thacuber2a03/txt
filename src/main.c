@@ -29,7 +29,7 @@ static void errorPrint(WrenVM* vm, WrenErrorType errorType,
 
 static void freeImport(WrenVM* vm, const char* name, WrenLoadModuleResult res)
 {
-	free(res.source);
+	if (res.source) free(res.source);
 }
 
 static WrenLoadModuleResult loadModule(WrenVM* vm, const char* name)
@@ -44,14 +44,23 @@ static WrenLoadModuleResult loadModule(WrenVM* vm, const char* name)
 	fseek(f, 0, SEEK_END);
 	int size = ftell(f);
 	fseek(f, 0, SEEK_SET);
-	char* source = malloc(size);
+	char* source = malloc(size+1);
 
 	if (source)
-		if (fread(source, 1, size, f) == size)
+	{
+		int readlen = fread(G.code, 1, fileSize, f);
+		if (readlen != fileSize)
+		{
+			printf("couldn't read file: %s\n", strerror(errno));
+			free(source);
+		}
+		else
 		{
 			source[size] = '\0';
 			res.source = source;
+			fclose(f);
 		}
+	}
 
 	res.onComplete = &freeImport;
 
@@ -80,11 +89,6 @@ int main(int argc, char* argv[])
 	fseek(f, 0, SEEK_END);
 	int fileSize = ftell(f);
 	fseek(f, 0, SEEK_SET);
-	if (fileSize > 1073741824) // 1 GiB
-	{
-		printf("the file is way too large, what the heck?");
-		return -1;
-	}
 	G.code = malloc(fileSize+1);
 
 	if (G.code)
