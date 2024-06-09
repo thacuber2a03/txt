@@ -84,11 +84,15 @@ allowed mouse button names are `left`, `middle` and `right`
 
 ## build
 
-run the `build.bat` file in the root directory
+it now supports Windows and Linux
 
-it currently only supports 64-bit windows, I don't know how to compile for other platforms
+Windows:
+- ~~run the `build.bat` file in the root directory~~ don't do it, I haven't checked if it still works
+or
+- if you're more of a Makefile person you can also run `mingw32-make`
 
-if you're more of a Makefile person you can also run `mingw32-make`
+Linux:
+- run `make`
 
 ## attributions
 
