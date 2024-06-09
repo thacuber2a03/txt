@@ -8,6 +8,8 @@ download latest txt version from releases
 make a main.wren file, then paste this small hello world in
 
 ```wren
+import "txt" for TXT
+
 class Game {
 	construct new() {
 		TXT.size(16, 16)

@@ -1,5 +1,14 @@
-locs = -Llib -Iinclude
-libs = -lwren -lraylib -lgdi32 -lopengl32 -lwinmm
+locs = -Iinclude
+libs = -lraylib -lwren -lm -lc
+cflags = -Wno-discarded-qualifiers
+
+ifeq ($(OS),Windows_NT)
+	locs += -Lwinlib
+	libs += -lgdi32 -lopengl32 -lwinmm
+	cflags += -static
+else
+	locs += -Llib
+endif
 
 main: 
-	gcc src\\*.c -o txt $(locs) $(libs) -static -Wno-discarded-qualifiers
+	gcc src/*.c -o txt $(locs) $(libs) $(cflags)

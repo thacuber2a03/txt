@@ -1,3 +1,5 @@
+#include <errno.h>
+
 #include "txt.h"
 
 #include "font.h"
@@ -5,6 +7,18 @@ extern unsigned char font_ttf[];
 extern unsigned int font_ttf_len;
 
 txtGlobal G = {0};
+
+static void die(const char* fmt, ...)
+{
+	fprintf(stderr, "fatal error: ");
+
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
+
+	exit(-1);
+}
 
 static void debugPrint(WrenVM* vm, const char* text)
 {
@@ -29,41 +43,42 @@ static void errorPrint(WrenVM* vm, WrenErrorType errorType,
 
 static void freeImport(WrenVM* vm, const char* name, WrenLoadModuleResult res)
 {
-	if (res.source) free(res.source);
+	if (res.source && res.source != txtClass) free(res.source);
 }
 
 static WrenLoadModuleResult loadModule(WrenVM* vm, const char* name)
 {
 	WrenLoadModuleResult res = {0};
+	res.onComplete = &freeImport;
+
+	if (!strcmp(name, "txt"))
+	{
+		res.source = txtClass;
+		return res;
+	}
 
 	// just straight up fopen the file
 	// idk if this is a proper solution to be honest
+	//
+	// update 2 years later: you're only compiling
+	// for Windows and Linux what makes you think that
+	// it's "not a proper solution" shut up
 	FILE* f = fopen(name, "rb");
-	if (!f) return res;
+	if (!f) die("couldn't open file: %s\n", strerror(errno));
 
 	fseek(f, 0, SEEK_END);
 	int size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 	char* source = malloc(size+1);
 
-	if (source)
-	{
-		int readlen = fread(G.code, 1, fileSize, f);
-		if (readlen != fileSize)
-		{
-			printf("couldn't read file: %s\n", strerror(errno));
-			free(source);
-		}
-		else
-		{
-			source[size] = '\0';
-			res.source = source;
-			fclose(f);
-		}
-	}
+	if (!source) die("couldn't allocate enough memory for loading file %s\n", name);
 
-	res.onComplete = &freeImport;
+	int readlen = fread(G.code, 1, size, f);
+	if (readlen != size) die("couldn't read file: %s\n", strerror(errno));
 
+	source[size] = '\0';
+	res.source = source;
+	fclose(f);
 	return res;
 }
 
@@ -146,7 +161,6 @@ int main(int argc, char* argv[])
 
 	SetWindowSize(screenSize.x, screenSize.y);
 
-	if (wrenInterpret(G.vm, "main", txtClass) != WREN_RESULT_SUCCESS) return -1;
 	if (wrenInterpret(G.vm, "main", G.code) != WREN_RESULT_SUCCESS) return -1;
 
 	// get the class' handle
