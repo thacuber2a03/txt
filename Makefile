@@ -1,5 +1,5 @@
 locs = -Iinclude
-libs = -lraylib -lwren -lm -lc
+libs = -lraylib -lwren -lm
 cflags = -Wno-discarded-qualifiers
 
 ifeq ($(OS),Windows_NT)
