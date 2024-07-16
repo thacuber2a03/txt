@@ -25,17 +25,17 @@ class Game {
 }
 ```
 
+if you cloned from this repo, the `main.wren` file should already be there
+
 save and close the file, then run `txt` in the command line
 
 tada.wav
 
-if you cloned from this repo, the `main.wren` file should already be there
-
 ## games made with it
 
 ### shiftword
-a game about shifting words around
-https://olbap.itch.io/shiftword
+a little game of shifting letters to make words
+https://ppepp.itch.io/shiftword
 
 ## doc
 
