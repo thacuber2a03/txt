@@ -5,7 +5,7 @@ a text based game framework, sorta like [cel7](https://rxi.itch.io/cel7) but not
 
 download latest txt version from releases
 
-make a main.wren file, then paste this small hello world in
+make a `main.wren` file, then paste this small hello world in
 
 ```wren
 import "txt" for TXT
@@ -28,6 +28,8 @@ class Game {
 save and close the file, then run `txt` in the command line
 
 tada.wav
+
+if you cloned from this repo, the `main.wren` file should already be there
 
 ## doc
 
