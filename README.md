@@ -31,6 +31,12 @@ tada.wav
 
 if you cloned from this repo, the `main.wren` file should already be there
 
+## games made with it
+
+### shiftword
+a game about shifting words around
+https://olbap.itch.io/shiftword
+
 ## doc
 
 you must make a 'Game' class with a `new` constructor and an `update` method that must also take in a parameter for the delta time
