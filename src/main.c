@@ -2,7 +2,7 @@
 
 #include "txt.h"
 
-#include "font.h"
+#include "font.inl"
 extern unsigned char font_ttf[];
 extern unsigned int font_ttf_len;
 
