@@ -34,7 +34,10 @@ tada.wav
 ## games made with it
 
 ### shiftword
+![image](https://github.com/user-attachments/assets/3678a830-3717-4382-8503-79aab9771f31)
+
 a little game of shifting letters to make words
+
 https://ppepp.itch.io/shiftword
 
 ## doc
