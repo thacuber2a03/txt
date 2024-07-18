@@ -26,7 +26,7 @@
 
 const char* txtClass = "\
 class TXT { \n\
-	static version { \"1.0\" } \n\
+	static version { \"1.0.1\" } \n\
 	foreign static width \n\
 	foreign static width=(w) \n\
 	foreign static height \n\
@@ -263,17 +263,20 @@ defineForeignMethod(setsize)
 
 defineForeignMethod(move)
 {
-	if (!txtEnsureType(vm, 1, WREN_TYPE_NUM)) return;
-	if (!txtEnsureType(vm, 2, WREN_TYPE_NUM)) return;
+	if (!txtEnsureType(vm, 1, WREN_TYPE_LIST)) return;
 
-	int dx = wrenGetSlotDouble(vm, 1),
-	    dy = wrenGetSlotDouble(vm, 2);
+	wrenEnsureSlots(vm, 3);
+	wrenGetListElement(vm, 1, 0, 2);
+	wrenGetListElement(vm, 1, 1, 1);
+	int dx = wrenGetSlotDouble(vm, 2),
+	    dy = wrenGetSlotDouble(vm, 1);
 
 	Vector2 pos = GetWindowPosition();
 	SetWindowPosition(
 		pos.x+dx*G.fontSize,
 		pos.y+dy*G.fontSize
 	);
+	wrenSetSlotNull(vm, 0);
 }
 
 defineForeignMethod(title)
