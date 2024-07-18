@@ -25,6 +25,5 @@ else
 	rm $(out)
 endif
 
-file ?= examples/hello.wren
 run: $(out)
 	$(out) $(file)

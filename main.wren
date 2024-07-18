@@ -1,5 +1,4 @@
 import "txt" for TXT
-import "random" for Random
 
 class Game {
 	construct new() {
