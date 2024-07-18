@@ -26,4 +26,4 @@ else
 endif
 
 run: $(out)
-	$(out)
+	$(out) examples/hello.wren
