@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 	if (argc > 1) startFile = argv[1];
 
 	FILE* f = fopen(startFile, "rb");
-	if (!f) die("file '%s' does not exist.\n", startFile);
+	if (!f) die("couldn't open '%s': %s\n(did you mean to open another file?)\n", startFile, strerror(errno));
 
 	fseek(f, 0, SEEK_END);
 	int fileSize = ftell(f);
