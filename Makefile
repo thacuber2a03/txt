@@ -25,5 +25,6 @@ else
 	rm $(out)
 endif
 
+file ?= examples/hello.wren
 run: $(out)
-	$(out) examples/hello.wren
+	$(out) $(file)
