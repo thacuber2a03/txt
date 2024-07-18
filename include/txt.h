@@ -1,11 +1,8 @@
 #ifndef TXT_H
 #define TXT_H
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include <string.h>
 
 #include "wren.h"
 #include "raylib.h"
@@ -15,7 +12,6 @@
  * each cell contains, in order:
  * 	the character to display
  * 	the rgb bytes for the background/foreground color
- * 	(I don't feel like designing a color palette)
  */
 
 // 7 bytes per cell
@@ -28,7 +24,6 @@ typedef struct
 	int totalCells;
 	char* title;
 	char* code;
-	WrenVM* vm;
 
 	uint8_t* screen;
 	Color currentColor, currentBgColor;

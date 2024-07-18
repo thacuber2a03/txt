@@ -1,63 +1,112 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
 #include "txt.h"
 
-#define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
+// #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
 
-#define defineForeignMethod(name) static void txt##name(WrenVM* vm)
-#define foreignMethod(name) if (strstr(signature, #name)) return txt##name
-#define getSetForeign(name) \
-	if (strstr(signature, #name)) \
-	{ \
-		if (params == 1) return txtset##name; \
-		return txtget##name;\
-	}
+#define min(a,b) ((a) < (b) ? (a) : (b))
+#define max(a,b) ((a) > (b) ? (a) : (b))
+#define clamp(v, a, b) max(a, min(v, b))
+
+#define defineForeignMethod(name) static void txtApi_##name(WrenVM* vm)
+#define foreignMethod(name) if (strstr(signature, #name)) return txtApi_##name
+
+#define getSetForeign(name) do { \
+		if (strstr(signature, #name)) \
+		{ \
+			if (params == 1) return txtApi_set##name; \
+			return txtApi_get##name;\
+		} \
+	} while(0)
+
+#define MIN_SCREEN_SIZE 8
+#define MAX_SCREEN_SIZE 128
 
 const char* txtClass = "\
 class TXT { \n\
-	foreign static width() \n\
-	static width { TXT.width() } \n\
-	foreign static width(w) \n\
-	foreign static height() \n\
-	static height { TXT.height() } \n\
-	foreign static height(h) \n\
-	static size { TXT.size() } \n\
-	foreign static size(s) \n\
-	foreign static size(w,h) \n\
-	foreign static move(x,y) \n\
-	foreign static title(t) \n\
-	foreign static fontSize(px) \n\
+	static version { \"1.0\" } \n\
+	foreign static width \n\
+	foreign static width=(w) \n\
+	foreign static height \n\
+	foreign static height=(h) \n\
+	foreign static size \n\
+	foreign static size=(p) \n\
+	static size(w, h) { size = [w, h] } \n\
+	foreign static move(p) \n\
+	static move(x, y) { move([x, y]) } \n\
+	foreign static title=(t) \n\
+	foreign static fontSize=(px) \n\
 	foreign static exit() \n\
 \n\
 	foreign static clear(char) \n\
 	foreign static clear() \n\
-	static write(x, y, value) { write_(x, y, value.toString) } \n\
-	foreign static write_(x,y,text) \n\
-	foreign static read(x, y) \n\
-	foreign static color(r,g,b) \n\
-	foreign static color(g) \n\
-	foreign static bgColor(r,g,b) \n\
-	foreign static bgColor(g) \n\
 \n\
-	foreign static mousePos() \n\
-	static mousePos { TXT.mousePos() } \n\
+	foreign static write_(p, text) \n\
+	static write(x, y, value) { write_([x, y], value.toString) } \n\
+	static write(p, value)    { write_(p, value.toString)      } \n\
+\n\
+	foreign static read(p) \n\
+	static read(x, y) { read([x, y]) } \n\
+\n\
+	foreign static charInfo(p) \n\
+	static charInfo(x, y) { charInfo([x, y]) } \n\
+\n\
+	foreign static color(r,g,b) \n\
+	static color(g) {\n\
+		System.print(\"WARNING: Calling deprecated method 'color(_)'\") \n\
+		color = g \n\
+	} \n\
+\n\
+	static color=(g) { \n\
+		if (g is Num) { \n\
+			color(g, g, g) \n\
+		} else if (g is List) { \n\
+			color(g[0], g[1], g[2]) \n\
+		} else { \n\
+			Fiber.abort(\"expected Num or List, got %(g.type)\") \n\
+		} \n\
+	} \n\
+\n\
+	foreign static bgColor(r,g,b) \n\
+	static bgColor(g) {\n\
+		System.print(\"WARNING: Calling deprecated method 'bgColor(_)'\") \n\
+		bgColor = g \n\
+	} \n\
+\n\
+	static bgColor=(g) { \n\
+		if (g is Num) { \n\
+			bgColor(g, g, g) \n\
+		} else if (g is List) { \n\
+			bgColor(g[0], g[1], g[2]) \n\
+		} else { \n\
+			Fiber.abort(\"expected Num or List, got %(g.type)\") \n\
+		} \n\
+	} \n\
+\n\
+	foreign static mousePos \n\
 	foreign static mouseDown(button) \n\
 	foreign static mousePressed(button) \n\
 	foreign static keyDown(key) \n\
+	foreign static keyDown \n\
 	foreign static keyPressed(key) \n\
-	foreign static charPressed() \n\
-	static charPressed { TXT.charPressed() } \n\
+	foreign static keyPressed \n\
+	foreign static charPressed \n\
 }\
 ";
 
 static char* typenames[] =
 {
-	[WREN_TYPE_NUM] = "number",
-	[WREN_TYPE_BOOL] = "bool",
-	[WREN_TYPE_STRING] = "string",
-	[WREN_TYPE_NULL] = "null",
-	[WREN_TYPE_LIST] = "list",
-	[WREN_TYPE_MAP] = "map",
-	[WREN_TYPE_UNKNOWN] = "unknown",
-	[WREN_TYPE_FOREIGN] = "foreign",
+	[WREN_TYPE_NUM] = "Num",
+	[WREN_TYPE_BOOL] = "Bool",
+	[WREN_TYPE_STRING] = "String",
+	[WREN_TYPE_NULL] = "Null",
+	[WREN_TYPE_LIST] = "List",
+	[WREN_TYPE_MAP] = "Map",
+	[WREN_TYPE_UNKNOWN] = "unknown object", // "unknown object (this is a bug)",
+	[WREN_TYPE_FOREIGN] = "foreign object", // "foreign object (this is a bug)",
 };
 
 /* I'm not going to get rid of this after all the time I spent writing it
@@ -82,7 +131,7 @@ static char* keynames[] = {
 };
 */
 
-static void txtThrowErr(const char* msg, ...)
+static void txtThrowErr(WrenVM *vm, const char* msg, ...)
 {
 	char err[256];
 
@@ -91,16 +140,20 @@ static void txtThrowErr(const char* msg, ...)
 	vsprintf(err, msg, args);
 	va_end(args);
 
-	wrenEnsureSlots(G.vm, 1);
-	wrenSetSlotString(G.vm, 0, err);
-	wrenAbortFiber(G.vm, 0);
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotString(vm, 0, err);
+	wrenAbortFiber(vm, 0);
 }
 
-static void txtEnsureType(int slot, WrenType type)
+static int txtEnsureType(WrenVM *vm, int slot, WrenType expected)
 {
-	WrenType actualType = wrenGetSlotType(G.vm, slot);
-	if (actualType != type)
-		txtThrowErr("expected %s, got %s", typenames[type], typenames[actualType]);
+	WrenType type = wrenGetSlotType(vm, slot);
+	if (type != expected)
+	{
+		txtThrowErr(vm, "expected %s, got %s", typenames[expected], typenames[type]);
+		return 0;
+	}
+	return 1;
 }
 
 static int getSignatureParams(const char* signature)
@@ -115,7 +168,7 @@ static int getSignatureParams(const char* signature)
 
 static void txtWriteCharIdx(int cell, char c)
 {
-	cell %= G.totalCells;
+	cell = (int)Wrap(cell, 0, G.totalCells);
 	int i = cell*CELL_SIZE;
 	G.screen[i] = c;
 
@@ -128,28 +181,37 @@ static void txtWriteCharIdx(int cell, char c)
 	G.screen[i+6] = G.currentBgColor.b;
 }
 
-static void txtWriteChar(int x, int y, char c)
+static inline void txtWriteChar(int x, int y, char c)
 {
-	txtWriteCharIdx((y*G.consoleSize.x+x), c);
+	txtWriteCharIdx(y*G.consoleSize.x+x, c);
 }
 
-static char txtGetCharIdx(int cell)
+static inline uint8_t *txtGetCharIdx(int cell)
 {
 	cell %= G.totalCells;
-	return G.screen[cell*CELL_SIZE];
+	return &G.screen[cell*CELL_SIZE];
 }
 
-static char txtGetChar(int x, int y)
+static inline uint8_t *txtGetChar(int x, int y)
 {
 	return txtGetCharIdx(y*G.consoleSize.x+x);
 }
 
-static void txtResize(uint8_t w, uint8_t h)
+static void txtResize(int w, int h)
 {
-	G.consoleSize.x = w;
-	G.consoleSize.y = h;
+	if (w < 0) w = MAX_SCREEN_SIZE + w+1;
+	if (h < 0) h = MAX_SCREEN_SIZE + h+1;
+
+	G.consoleSize = Vector2Clamp(
+		(Vector2){w, h},
+		(Vector2){MIN_SCREEN_SIZE, MIN_SCREEN_SIZE},
+		(Vector2){MAX_SCREEN_SIZE, MAX_SCREEN_SIZE}
+	);
+
 	G.totalCells = w*h;
-	G.screen = realloc(G.screen, G.totalCells*CELL_SIZE);
+	size_t bytes = G.totalCells*CELL_SIZE;
+	G.screen = realloc(G.screen, bytes);
+	memset(G.screen, 0, bytes);
 
 	SetWindowSize(
 		G.fontSize*G.consoleSize.x,
@@ -159,16 +221,18 @@ static void txtResize(uint8_t w, uint8_t h)
 
 defineForeignMethod(setwidth)
 {
-	txtEnsureType(1, WREN_TYPE_NUM);
-	txtResize(wrenGetSlotDouble(G.vm, 1), G.consoleSize.y);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_NUM)) return;
+	txtResize(wrenGetSlotDouble(vm, 1), G.consoleSize.y);
+	wrenSetSlotNull(vm, 0);
 }
 
 defineForeignMethod(getwidth) { wrenSetSlotDouble(vm, 0, G.consoleSize.x); }
 
 defineForeignMethod(setheight)
 {
-	txtEnsureType(1, WREN_TYPE_NUM);
-	txtResize(G.consoleSize.x, wrenGetSlotDouble(G.vm, 1));
+	if (!txtEnsureType(vm, 1, WREN_TYPE_NUM)) return;
+	txtResize(G.consoleSize.x, wrenGetSlotDouble(vm, 1));
+	wrenSetSlotNull(vm, 0);
 }
 
 defineForeignMethod(getheight) { wrenSetSlotDouble(vm, 0, G.consoleSize.y); }
@@ -186,18 +250,7 @@ defineForeignMethod(getsize)
 
 defineForeignMethod(setsize)
 {
-	txtEnsureType(1, WREN_TYPE_NUM);
-	txtEnsureType(2, WREN_TYPE_NUM);
-
-	txtResize(
-		wrenGetSlotDouble(vm, 1),
-		wrenGetSlotDouble(vm, 2)
-	);
-}
-
-defineForeignMethod(setsizelist)
-{
-	txtEnsureType(1, WREN_TYPE_LIST);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_LIST)) return;
 
 	wrenEnsureSlots(vm, 3);
 	wrenGetListElement(vm, 1, 1, 2);
@@ -211,11 +264,11 @@ defineForeignMethod(setsizelist)
 
 defineForeignMethod(move)
 {
-	txtEnsureType(1, WREN_TYPE_NUM);
-	txtEnsureType(2, WREN_TYPE_NUM);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_NUM)) return;
+	if (!txtEnsureType(vm, 2, WREN_TYPE_NUM)) return;
 
-	int dx = wrenGetSlotDouble(G.vm, 1);
-	int dy = wrenGetSlotDouble(G.vm, 2);
+	int dx = wrenGetSlotDouble(vm, 1),
+	    dy = wrenGetSlotDouble(vm, 2);
 
 	Vector2 pos = GetWindowPosition();
 	SetWindowPosition(
@@ -226,22 +279,23 @@ defineForeignMethod(move)
 
 defineForeignMethod(title)
 {
-	txtEnsureType(1, WREN_TYPE_STRING);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_STRING)) return;
 	SetWindowTitle(wrenGetSlotString(vm, 1));
 }
 
 defineForeignMethod(fontSize)
 {
-	txtEnsureType(1, WREN_TYPE_NUM);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_NUM)) return;
 	G.fontSize = wrenGetSlotDouble(vm, 1);
+	G.fontSize = clamp(G.fontSize, 8, 32);
 	txtResize(G.consoleSize.x, G.consoleSize.y);
 }
 
 defineForeignMethod(clear)
 {
-	txtEnsureType(1, WREN_TYPE_STRING);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_STRING)) return;
 
-	const char* chr = wrenGetSlotString(G.vm, 1);
+	const char* chr = wrenGetSlotString(vm, 1);
 	for (int i = 0; i < G.totalCells; i++) txtWriteCharIdx(i, *chr);
 }
 
@@ -252,68 +306,97 @@ defineForeignMethod(clearSpaces)
 
 defineForeignMethod(write)
 {
-	txtEnsureType(1, WREN_TYPE_NUM);
-	txtEnsureType(2, WREN_TYPE_NUM);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_LIST)) return;
+	if (!txtEnsureType(vm, 2, WREN_TYPE_STRING)) return;
 
-	int x = wrenGetSlotDouble(vm, 1);
-	int y = wrenGetSlotDouble(vm, 2);
-	const char* text = wrenGetSlotString(vm, 3);
+	wrenEnsureSlots(vm, 4);
+	wrenGetListElement(vm, 1, 0, 3);
+	wrenGetListElement(vm, 1, 1, 4);
 
-	for (int i = 0; i < strlen(text); i++) txtWriteChar(x+i, y, text[i]);
+	int x = wrenGetSlotDouble(vm, 3);
+	int y = wrenGetSlotDouble(vm, 4);
+	const char* text = wrenGetSlotString(vm, 2);
+
+	int len = strlen(text);
+	for (int i = 0; i < strlen(text); i++)
+		txtWriteChar(x+i, y, text[i]);
+	wrenSetSlotDouble(vm, 0, len);
 }
 
 defineForeignMethod(read)
 {
-	txtEnsureType(1, WREN_TYPE_NUM);
-	txtEnsureType(2, WREN_TYPE_NUM);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_LIST)) return;
 
-	int x = wrenGetSlotDouble(G.vm, 1);
-	int y = wrenGetSlotDouble(G.vm, 2);
-	const char c = txtGetChar(x, y);
+	wrenEnsureSlots(vm, 4);
+	wrenGetListElement(vm, 1, 0, 2);
+	wrenGetListElement(vm, 1, 1, 3);
 
-	wrenSetSlotBytes(G.vm, 0, &c, 1);
+	int x = wrenGetSlotDouble(vm, 2);
+	int y = wrenGetSlotDouble(vm, 3);
+	const char c = *txtGetChar(x, y);
+
+	wrenSetSlotBytes(vm, 0, &c, 1);
+}
+
+defineForeignMethod(charInfo)
+{
+	if (!txtEnsureType(vm, 1, WREN_TYPE_LIST)) return;
+
+	wrenEnsureSlots(vm, 4);
+	wrenGetListElement(vm, 1, 0, 2);
+	wrenGetListElement(vm, 1, 1, 3);
+
+	int x = wrenGetSlotDouble(vm, 2),
+	    y = wrenGetSlotDouble(vm, 3);
+
+	// ohhhhh boy this is going to be a wild ride
+	wrenEnsureSlots(vm, 5);
+	wrenSetSlotNewMap(vm, 0);
+
+	const uint8_t *c = txtGetChar(x, y);
+	wrenSetSlotBytes(vm, 1, (char*)c, 1);
+	wrenSetSlotString(vm, 2, "char");
+	wrenSetMapValue(vm, 0, 2, 1);
+
+	// foreground color
+	wrenSetSlotNewList(vm, 1);
+	wrenSetSlotDouble(vm, 2, c[1]); wrenInsertInList(vm, 1, 0, 2);
+	wrenSetSlotDouble(vm, 3, c[2]); wrenInsertInList(vm, 1, 1, 3);
+	wrenSetSlotDouble(vm, 4, c[3]); wrenInsertInList(vm, 1, 2, 4);
+
+	wrenSetSlotString(vm, 2, "fg");
+	wrenSetMapValue(vm, 0, 2, 1);
+
+	// background color
+	wrenSetSlotNewList(vm, 1);
+	wrenSetSlotDouble(vm, 2, c[4]); wrenInsertInList(vm, 1, 0, 2);
+	wrenSetSlotDouble(vm, 3, c[5]); wrenInsertInList(vm, 1, 1, 3);
+	wrenSetSlotDouble(vm, 4, c[6]); wrenInsertInList(vm, 1, 2, 4);
+
+	wrenSetSlotString(vm, 2, "bg");
+	wrenSetMapValue(vm, 0, 2, 1);
 }
 
 defineForeignMethod(color)
 {
-	txtEnsureType(1, WREN_TYPE_NUM);
-	txtEnsureType(2, WREN_TYPE_NUM);
-	txtEnsureType(3, WREN_TYPE_NUM);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_NUM)) return;
+	if (!txtEnsureType(vm, 2, WREN_TYPE_NUM)) return;
+	if (!txtEnsureType(vm, 3, WREN_TYPE_NUM)) return;
 
-	G.currentColor.r = wrenGetSlotDouble(vm, 1);
-	G.currentColor.g = wrenGetSlotDouble(vm, 2);
-	G.currentColor.b = wrenGetSlotDouble(vm, 3);
-}
-
-defineForeignMethod(grayscale)
-{
-	txtEnsureType(1, WREN_TYPE_NUM);
-
-	int g = wrenGetSlotDouble(vm, 1);
-	G.currentColor.r = g;
-	G.currentColor.g = g;
-	G.currentColor.b = g;
+	G.currentColor.r = (uint8_t)wrenGetSlotDouble(vm, 1);
+	G.currentColor.g = (uint8_t)wrenGetSlotDouble(vm, 2);
+	G.currentColor.b = (uint8_t)wrenGetSlotDouble(vm, 3);
 }
 
 defineForeignMethod(bgColor)
 {
-	txtEnsureType(1, WREN_TYPE_NUM);
-	txtEnsureType(2, WREN_TYPE_NUM);
-	txtEnsureType(3, WREN_TYPE_NUM);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_NUM)) return;
+	if (!txtEnsureType(vm, 2, WREN_TYPE_NUM)) return;
+	if (!txtEnsureType(vm, 3, WREN_TYPE_NUM)) return;
 
-	G.currentBgColor.r = wrenGetSlotDouble(vm, 1);
-	G.currentBgColor.g = wrenGetSlotDouble(vm, 2);
-	G.currentBgColor.b = wrenGetSlotDouble(vm, 3);
-}
-
-defineForeignMethod(bgGrayscale)
-{
-	txtEnsureType(1, WREN_TYPE_NUM);
-
-	int g = wrenGetSlotDouble(vm, 1);
-	G.currentBgColor.r = g;
-	G.currentBgColor.g = g;
-	G.currentBgColor.b = g;
+	G.currentBgColor.r = (uint8_t)wrenGetSlotDouble(vm, 1);
+	G.currentBgColor.g = (uint8_t)wrenGetSlotDouble(vm, 2);
+	G.currentBgColor.b = (uint8_t)wrenGetSlotDouble(vm, 3);
 }
 
 defineForeignMethod(mousePos)
@@ -333,14 +416,14 @@ defineForeignMethod(mousePos)
 
 defineForeignMethod(mouseDown)
 {
-	txtEnsureType(1, WREN_TYPE_STRING);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_STRING)) return;
 
 	const char* buttonName = wrenGetSlotString(vm, 1);
 	int button = -1;
 	if (!strcasecmp(buttonName, "left"))   button = MOUSE_BUTTON_LEFT;
 	if (!strcasecmp(buttonName, "right"))  button = MOUSE_BUTTON_RIGHT;
 	if (!strcasecmp(buttonName, "middle")) button = MOUSE_BUTTON_MIDDLE;
-	if (button == -1) txtThrowErr("unknown button name");
+	if (button == -1) txtThrowErr(vm, "unknown button name");
 
 	wrenEnsureSlots(vm, 1);
 	wrenSetSlotBool(vm, 0, IsMouseButtonDown(button));
@@ -348,14 +431,14 @@ defineForeignMethod(mouseDown)
 
 defineForeignMethod(mousePressed)
 {
-	txtEnsureType(1, WREN_TYPE_STRING);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_STRING)) return;
 
 	const char* buttonName = wrenGetSlotString(vm, 1);
 	int button = -1;
 	if (!strcasecmp(buttonName, "left"))   button = MOUSE_BUTTON_LEFT;
 	if (!strcasecmp(buttonName, "right"))  button = MOUSE_BUTTON_RIGHT;
 	if (!strcasecmp(buttonName, "middle")) button = MOUSE_BUTTON_MIDDLE;
-	if (button == -1) txtThrowErr("unknown button name");
+	if (button == -1) txtThrowErr(vm, "unknown button name");
 
 	wrenEnsureSlots(vm, 1);
 	wrenSetSlotBool(vm, 0, IsMouseButtonPressed(button));
@@ -413,32 +496,41 @@ static int getKeyFromKeyname(const char* keyname)
 
 defineForeignMethod(keyDown)
 {
-	txtEnsureType(1, WREN_TYPE_STRING);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_STRING)) return;
 
 	const char* keyname = wrenGetSlotString(vm, 1);
 	int key = getKeyFromKeyname(keyname);
-	if (key == KEY_NULL) txtThrowErr("unknown key name");
+	if (key == KEY_NULL) txtThrowErr(vm, "unknown key name");
 
 	wrenSetSlotBool(vm, 0, IsKeyDown(key));
 }
 
 defineForeignMethod(keyPressed)
 {
-	txtEnsureType(1, WREN_TYPE_STRING);
+	if (!txtEnsureType(vm, 1, WREN_TYPE_STRING)) return;
 
 	const char* keyname = wrenGetSlotString(vm, 1);
 	int key = getKeyFromKeyname(keyname);
-	if (key == KEY_NULL) txtThrowErr("unknown key name");
+	if (key == KEY_NULL) txtThrowErr(vm, "unknown key name");
 
 	wrenSetSlotBool(vm, 0, IsKeyPressed(key));
 }
 
-defineForeignMethod(charPressed) {
+defineForeignMethod(charPressed)
+{
 	int chr = GetCharPressed();
+	if (chr == 0)
+	{
+		wrenSetSlotString(vm, 0, "");
+		return;
+	}
+
 	int size;
-	char* utf8char = CodepointToUTF8(chr, &size);
+	const char* utf8char = CodepointToUTF8(chr, &size);
 	wrenSetSlotBytes(vm, 0, utf8char, size);
 }
+
+defineForeignMethod(anyKeyPressed) { wrenSetSlotBool(vm, 0, GetKeyPressed()); }
 
 defineForeignMethod(exit) { G.close = true; }
 
@@ -449,51 +541,37 @@ WrenForeignMethodFn bindTxtMethods(WrenVM* vm, const char* module, const char* c
 
 	getSetForeign(width);
 	getSetForeign(height);
-	if (strstr(signature, "title")) return txttitle;
+	foreignMethod(title);
 
-	if (strstr(signature, "size"))
-	{
-		if (params == 2) return txtsetsize;
-		else if (params == 1) return txtsetsizelist;
-		return txtgetsize;
-	}
-
-	if (strstr(signature, "move"))
-	{
-		if (params == 2) return txtmove;
-		//if (params == 1) return txtmovelist;
-		return NULL;
-	}
-
+	getSetForeign(size);
+	foreignMethod(move);
 	foreignMethod(fontSize);
 
 	if (strstr(signature, "clear"))
 	{
-		if (params == 0) return txtclearSpaces;
-		return txtclear;
+		if (params == 0) return txtApi_clearSpaces;
+		return txtApi_clear;
 	}
 
-	if (strstr(signature, "write_")) return txtwrite;
+	if (strstr(signature, "write_")) return txtApi_write;
 
 	foreignMethod(read);
-
-	if (strstr(signature, "color"))
-	{
-		if (params == 1) return txtgrayscale;
-		return txtcolor;
-	}
-
-	if (strstr(signature, "bgColor"))
-	{
-		if (params == 1) return txtbgGrayscale;
-		return txtbgColor;
-	}
-
+	foreignMethod(charInfo);
+	foreignMethod(color);
+	foreignMethod(bgColor);
 	foreignMethod(mousePos);
 	foreignMethod(mouseDown);
 	foreignMethod(mousePressed);
 	foreignMethod(keyDown);
-	foreignMethod(keyPressed);
+
+	if (strstr(signature, "keyPressed"))
+	{
+		if (params == 0) return txtApi_anyKeyPressed;
+		return txtApi_keyPressed;
+	}
+
 	foreignMethod(charPressed);
 	foreignMethod(exit);
+
+	return NULL;
 }
