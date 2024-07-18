@@ -71,9 +71,14 @@ note: both the current color and current background color will reset after the e
 | `keyPressed`        | returns whether *any* key has been pressed                               |
 | `charsPressed`      | returns the character just pressed, call multiple times for chars queued |
 
-allowed key names are a-z, 0-9, arrow keys (`right`, `left`, `up`, `down`), `space` and `escape`
+#### allowed key names
+- a-z, 0-9
+- arrow keys (`right`, `left`, `up`, `down`)
+- `space`, `enter`/`return`, `escape`, `backspace` and `delete`
+- `lctrl`/`rctrl`, `lshift`/`rshift`, `tab`
 
-allowed mouse button names are `left`, `middle` and `right`
+#### allowed mouse button names
+- `left`, `middle` and `right`
 
 ### miscellaneous
 

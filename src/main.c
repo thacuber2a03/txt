@@ -50,9 +50,9 @@ static void errorPrint(WrenVM* vm, WrenErrorType errorType,
 
 #define MODULE_SEP "/"
 #ifdef __unix__
-#define SEPARATOR "/"
+#define SEPARATOR '/'
 #else
-#define SEPARATOR "\\"
+#define SEPARATOR '\\'
 #endif
 
 static char *module = NULL;
@@ -109,9 +109,13 @@ static WrenLoadModuleResult loadModule(WrenVM* vm, const char* name)
 
 	module = NULL;
 	int modlen = strlen(name);
-	module = malloc(modlen + sizeof ".wren");
+	module = malloc(modlen + sizeof ".wren" + 1);
+
 	strcpy(module, name);
+	for (int i = 0; i < modlen; i++)
+		if (module[i] == '/') module[i] = SEPARATOR;
 	strcpy(module+modlen, ".wren");
+	module[modlen + sizeof ".wren"] = '\0';
 
 	res.source = readFile(module, name);
 	if (module == NULL)

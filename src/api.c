@@ -5,14 +5,13 @@
 
 #include "txt.h"
 
-// #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
-
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #define clamp(v, a, b) max(a, min(v, b))
 
 #define defineForeignMethod(name) static void txtApi_##name(WrenVM* vm)
 #define foreignMethod(name) if (strstr(signature, #name)) return txtApi_##name
+#define privateForeignMethod(name) if (strstr(signature, #name "_")) return txtApi_##name
 
 #define getSetForeign(name) do { \
 		if (strstr(signature, #name)) \
@@ -93,7 +92,7 @@ class TXT { \n\
 	foreign static keyDown \n\
 	foreign static keyPressed(key) \n\
 	foreign static keyPressed \n\
-	foreign static charPressed \n\
+	foreign static charsPressed \n\
 }\
 ";
 
@@ -420,9 +419,9 @@ defineForeignMethod(mouseDown)
 
 	const char* buttonName = wrenGetSlotString(vm, 1);
 	int button = -1;
-	if (!strcasecmp(buttonName, "left"))   button = MOUSE_BUTTON_LEFT;
-	if (!strcasecmp(buttonName, "right"))  button = MOUSE_BUTTON_RIGHT;
-	if (!strcasecmp(buttonName, "middle")) button = MOUSE_BUTTON_MIDDLE;
+	if (!strcmp(buttonName, "left"))   button = MOUSE_BUTTON_LEFT;
+	if (!strcmp(buttonName, "right"))  button = MOUSE_BUTTON_RIGHT;
+	if (!strcmp(buttonName, "middle")) button = MOUSE_BUTTON_MIDDLE;
 	if (button == -1) txtThrowErr(vm, "unknown button name");
 
 	wrenEnsureSlots(vm, 1);
@@ -435,9 +434,9 @@ defineForeignMethod(mousePressed)
 
 	const char* buttonName = wrenGetSlotString(vm, 1);
 	int button = -1;
-	if (!strcasecmp(buttonName, "left"))   button = MOUSE_BUTTON_LEFT;
-	if (!strcasecmp(buttonName, "right"))  button = MOUSE_BUTTON_RIGHT;
-	if (!strcasecmp(buttonName, "middle")) button = MOUSE_BUTTON_MIDDLE;
+	if (!strcmp(buttonName, "left"))   button = MOUSE_BUTTON_LEFT;
+	if (!strcmp(buttonName, "right"))  button = MOUSE_BUTTON_RIGHT;
+	if (!strcmp(buttonName, "middle")) button = MOUSE_BUTTON_MIDDLE;
 	if (button == -1) txtThrowErr(vm, "unknown button name");
 
 	wrenEnsureSlots(vm, 1);
@@ -447,50 +446,60 @@ defineForeignMethod(mousePressed)
 static int getKeyFromKeyname(const char* keyname)
 {
 	// I'm so sorry
-	if (!strcasecmp(keyname, "q"     )) return KEY_Q;
-	if (!strcasecmp(keyname, "w"     )) return KEY_W;
-	if (!strcasecmp(keyname, "e"     )) return KEY_E;
-	if (!strcasecmp(keyname, "r"     )) return KEY_R;
-	if (!strcasecmp(keyname, "t"     )) return KEY_T;
-	if (!strcasecmp(keyname, "y"     )) return KEY_Y;
-	if (!strcasecmp(keyname, "u"     )) return KEY_U;
-	if (!strcasecmp(keyname, "i"     )) return KEY_I;
-	if (!strcasecmp(keyname, "o"     )) return KEY_O;
-	if (!strcasecmp(keyname, "p"     )) return KEY_P;
-	if (!strcasecmp(keyname, "a"     )) return KEY_A;
-	if (!strcasecmp(keyname, "s"     )) return KEY_S;
-	if (!strcasecmp(keyname, "d"     )) return KEY_D;
-	if (!strcasecmp(keyname, "f"     )) return KEY_F;
-	if (!strcasecmp(keyname, "g"     )) return KEY_G;
-	if (!strcasecmp(keyname, "h"     )) return KEY_H;
-	if (!strcasecmp(keyname, "j"     )) return KEY_J;
-	if (!strcasecmp(keyname, "k"     )) return KEY_K;
-	if (!strcasecmp(keyname, "l"     )) return KEY_L;
-	if (!strcasecmp(keyname, "z"     )) return KEY_Z;
-	if (!strcasecmp(keyname, "x"     )) return KEY_X;
-	if (!strcasecmp(keyname, "c"     )) return KEY_C;
-	if (!strcasecmp(keyname, "v"     )) return KEY_V;
-	if (!strcasecmp(keyname, "b"     )) return KEY_B;
-	if (!strcasecmp(keyname, "n"     )) return KEY_N;
-	if (!strcasecmp(keyname, "m"     )) return KEY_M;
+	if (!strcmp(keyname, "q"        )) return KEY_Q;
+	if (!strcmp(keyname, "w"        )) return KEY_W;
+	if (!strcmp(keyname, "e"        )) return KEY_E;
+	if (!strcmp(keyname, "r"        )) return KEY_R;
+	if (!strcmp(keyname, "t"        )) return KEY_T;
+	if (!strcmp(keyname, "y"        )) return KEY_Y;
+	if (!strcmp(keyname, "u"        )) return KEY_U;
+	if (!strcmp(keyname, "i"        )) return KEY_I;
+	if (!strcmp(keyname, "o"        )) return KEY_O;
+	if (!strcmp(keyname, "p"        )) return KEY_P;
+	if (!strcmp(keyname, "a"        )) return KEY_A;
+	if (!strcmp(keyname, "s"        )) return KEY_S;
+	if (!strcmp(keyname, "d"        )) return KEY_D;
+	if (!strcmp(keyname, "f"        )) return KEY_F;
+	if (!strcmp(keyname, "g"        )) return KEY_G;
+	if (!strcmp(keyname, "h"        )) return KEY_H;
+	if (!strcmp(keyname, "j"        )) return KEY_J;
+	if (!strcmp(keyname, "k"        )) return KEY_K;
+	if (!strcmp(keyname, "l"        )) return KEY_L;
+	if (!strcmp(keyname, "z"        )) return KEY_Z;
+	if (!strcmp(keyname, "x"        )) return KEY_X;
+	if (!strcmp(keyname, "c"        )) return KEY_C;
+	if (!strcmp(keyname, "v"        )) return KEY_V;
+	if (!strcmp(keyname, "b"        )) return KEY_B;
+	if (!strcmp(keyname, "n"        )) return KEY_N;
+	if (!strcmp(keyname, "m"        )) return KEY_M;
 
-	if (!strcasecmp(keyname, "0"     )) return KEY_ZERO;
-	if (!strcasecmp(keyname, "1"     )) return KEY_ONE;
-	if (!strcasecmp(keyname, "2"     )) return KEY_TWO;
-	if (!strcasecmp(keyname, "3"     )) return KEY_THREE;
-	if (!strcasecmp(keyname, "4"     )) return KEY_FOUR;
-	if (!strcasecmp(keyname, "5"     )) return KEY_FIVE;
-	if (!strcasecmp(keyname, "6"     )) return KEY_SIX;
-	if (!strcasecmp(keyname, "7"     )) return KEY_SEVEN;
-	if (!strcasecmp(keyname, "8"     )) return KEY_EIGHT;
-	if (!strcasecmp(keyname, "9"     )) return KEY_NINE;
+	if (!strcmp(keyname, "0"        )) return KEY_ZERO;
+	if (!strcmp(keyname, "1"        )) return KEY_ONE;
+	if (!strcmp(keyname, "2"        )) return KEY_TWO;
+	if (!strcmp(keyname, "3"        )) return KEY_THREE;
+	if (!strcmp(keyname, "4"        )) return KEY_FOUR;
+	if (!strcmp(keyname, "5"        )) return KEY_FIVE;
+	if (!strcmp(keyname, "6"        )) return KEY_SIX;
+	if (!strcmp(keyname, "7"        )) return KEY_SEVEN;
+	if (!strcmp(keyname, "8"        )) return KEY_EIGHT;
+	if (!strcmp(keyname, "9"        )) return KEY_NINE;
 
-	if (!strcasecmp(keyname, "up"    )) return KEY_UP;
-	if (!strcasecmp(keyname, "down"  )) return KEY_DOWN;
-	if (!strcasecmp(keyname, "left"  )) return KEY_LEFT;
-	if (!strcasecmp(keyname, "right" )) return KEY_RIGHT;
-	if (!strcasecmp(keyname, "space" )) return KEY_SPACE;
-	if (!strcasecmp(keyname, "escape")) return KEY_ESCAPE;
+	if (!strcmp(keyname, "up"       )) return KEY_UP;
+	if (!strcmp(keyname, "down"     )) return KEY_DOWN;
+	if (!strcmp(keyname, "left"     )) return KEY_LEFT;
+	if (!strcmp(keyname, "right"    )) return KEY_RIGHT;
+	if (!strcmp(keyname, "space"    )) return KEY_SPACE;
+
+	if (!strcmp(keyname, "lshift"   )) return KEY_LEFT_SHIFT;
+	if (!strcmp(keyname, "rshift"   )) return KEY_RIGHT_SHIFT;
+	if (!strcmp(keyname, "lctrl"    )) return KEY_LEFT_CONTROL;
+	if (!strcmp(keyname, "rctrl"    )) return KEY_RIGHT_CONTROL;
+	if (!strcmp(keyname, "tab"      )) return KEY_TAB;
+	if (!strcmp(keyname, "enter"    )) return KEY_ENTER;
+	if (!strcmp(keyname, "return"   )) return KEY_ENTER;
+	if (!strcmp(keyname, "escape"   )) return KEY_ESCAPE;
+	if (!strcmp(keyname, "backspace")) return KEY_BACKSPACE;
+	if (!strcmp(keyname, "delete"   )) return KEY_DELETE;
 	return KEY_NULL;
 }
 
@@ -553,7 +562,7 @@ WrenForeignMethodFn bindTxtMethods(WrenVM* vm, const char* module, const char* c
 		return txtApi_clear;
 	}
 
-	if (strstr(signature, "write_")) return txtApi_write;
+	privateForeignMethod(write);
 
 	foreignMethod(read);
 	foreignMethod(charInfo);
