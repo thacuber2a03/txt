@@ -579,7 +579,7 @@ WrenForeignMethodFn bindTxtMethods(WrenVM* vm, const char* module, const char* c
 		return txtApi_keyPressed;
 	}
 
-	foreignMethod(charPressed);
+	foreignMethod(charsPressed);
 	foreignMethod(exit);
 
 	return NULL;
