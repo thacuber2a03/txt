@@ -8,8 +8,7 @@
 #include "txt.h"
 
 #include "font.inl"
-extern unsigned char font_ttf[];
-extern unsigned int font_ttf_len;
+#include "icon.inl"
 
 txtGlobal G = {0};
 
@@ -182,6 +181,8 @@ int main(int argc, char* argv[])
 	SetTraceLogLevel(LOG_NONE);
 	InitWindow(0, 0, "a txt game");
 	SetWindowState(FLAG_WINDOW_HIDDEN);
+	Image icon = LoadImageFromMemory(".png", icon_png, icon_png_len);
+	SetWindowIcon(icon);
 	SetExitKey(KEY_NULL);
 
 	G.font = LoadFontFromMemory(".ttf", font_ttf, font_ttf_len, G.fontSize, NULL, 657);
