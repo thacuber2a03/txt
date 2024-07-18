@@ -525,7 +525,7 @@ defineForeignMethod(keyPressed)
 	wrenSetSlotBool(vm, 0, IsKeyPressed(key));
 }
 
-defineForeignMethod(charPressed)
+defineForeignMethod(charsPressed)
 {
 	int chr = GetCharPressed();
 	if (chr == 0)
