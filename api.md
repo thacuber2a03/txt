@@ -23,19 +23,21 @@ note: all window position/size related methods are measured in cells
 | `fontSize(px)` | sets font size to `px`                                |
 | `exit()`       | exits txt                                             |
 
-## drawing methods
+## screen methods
 
 | method | description |
 | :-: | :-: |
 | `clear(char)`      | clears screen with character `char`                                  |
 | `write(x,y,value)` | writes `value` at position `x`, `y`                                  |
 | `write(p,value)`   | version of `write` that takes in a list                              |
-| `read(x,y)`        | reads character at position `x`, `y`                                 |
-| `read(p)`          | version of `read` that takes in a list                               |
 | `color(r,g,b)`     | sets color for new characters to `r`, `g`, `b`                       |
 | `color=(g)`        | list version of `color(r,g,b)`, set to a num for grayscale instead   |
 | `bgColor(r,g,b)`   | same as `color(r,g,b)` but sets background color instead             |
 | `bgColor=(g)`      | list version of `bgColor(r,g,b)`, set to a num for grayscale instead |
+| `read(x,y)`        | reads character at position `x`, `y`                                 |
+| `read(p)`          | version of `read` that takes in a list                               |
+| `charInfo(x, y)`   | get info about character at `x`, `y`                                 |
+| `charInfo(p)`      | version of `charInfo(x, y)` that takes in a list                     |
 
 note: both the current color and current background color will reset after the end of the `update` method
 
