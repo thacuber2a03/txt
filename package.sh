@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-mkdir release
-make && cp txt release/
+set -e
+mkdir -p release
+make
+cp txt release/
 cp examples/ release/ -r
 cp LICENSE release/
 cp main.wren release/
