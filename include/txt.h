@@ -8,6 +8,8 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#define TXT_VERSION "1.0.1"
+
 /**
  * each cell contains, in order:
  * 	the character to display

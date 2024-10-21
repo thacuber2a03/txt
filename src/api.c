@@ -26,7 +26,7 @@
 
 const char* txtClass = "\
 class TXT { \n\
-	static version { \"1.0.1\" } \n\
+	static version { \"" TXT_VERSION "\" } \n\
 	foreign static width \n\
 	foreign static width=(w) \n\
 	foreign static height \n\
